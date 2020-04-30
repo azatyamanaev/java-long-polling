@@ -17,7 +17,7 @@ public class MessagesController {
 
     private MessagesService messagesService;
 
-    private final Map<DeferredResult<List<MessageDto>>, Integer> chatRequests =
+    private static final Map<DeferredResult<List<MessageDto>>, Integer> chatRequests =
             new ConcurrentHashMap<>();
 
 
@@ -30,7 +30,7 @@ public class MessagesController {
     public DeferredResult<List<MessageDto>> getMessages(@RequestParam int messageIndex) {
 
         final DeferredResult<List<MessageDto>> deferredResult = new DeferredResult<>(null, Collections.emptyList());
-        this.chatRequests.put(deferredResult, messageIndex);
+        chatRequests.put(deferredResult, messageIndex);
 
         deferredResult.onCompletion(() -> chatRequests.remove(deferredResult));
 
@@ -51,7 +51,7 @@ public class MessagesController {
         messagesService.saveMessage(messageDto);
 
 
-        for (Map.Entry<DeferredResult<List<MessageDto>>, Integer> entry : this.chatRequests.entrySet()) {
+        for (Map.Entry<DeferredResult<List<MessageDto>>, Integer> entry : chatRequests.entrySet()) {
             List<MessageDto> messages = messagesService.getMessages(entry.getValue());
             entry.getKey().setResult(messages);
         }
